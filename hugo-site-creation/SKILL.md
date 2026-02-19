@@ -1,13 +1,6 @@
 ---
-name: documentation-site-creation
+name: hugo-site-creation
 description: Create comprehensive documentation and training guide sites using Hugo and modern documentation themes
-applyTo: '**'
-tags:
-  - documentation
-  - hugo
-  - static-site
-  - training-guides
-  - github-pages
 ---
 
 # Skill: Creating Comprehensive Documentation/Training Guide Sites
@@ -27,6 +20,34 @@ This skill captures the methodology, tools, and best practices for creating prof
 - Establishing a learning portal for enterprise software
 
 ---
+
+## Important
+
+- When docs are structured hierarchically (sections are documents under a common parent), that you have confirmed that these documents are being served correct. You will do this by running `hugo serve -s docs/learn` and navigating to the parent document (e.g. `http://localhost:1313/docs/learn/`) and confirming that the child documents are listed and accessible and rendering precisely what you are expect.  If not, then fix so that they are. Iterate until correct.
+- **⚠️ CRITICAL — Empty section pages:** The Lotus Docs `list.html` template only renders child page cards — it completely ignores `_index.md` body content. A section directory that contains only `_index.md` with no child pages will render as a completely blank page in the browser. Rule: `_index.md` must contain only a brief 1–3 sentence overview. All actual content must live in named child `.md` files. Before finishing, verify every section has at least one child page.
+- Include screenshot placeholders in the documentation with descriptive filenames and clear descriptions of what each screenshot should show. See the format of this later in this SKILLS document.
+- **⚠️ CRITICAL — Navbar link colours:** The links at the top of the landing page are always difficult to read. You must override them with a `layouts/partials/head.html` file (see "Site-wide CSS injection" in Phase 3.5). For Lotus Docs, use these exact selectors — white links over the hero, brand colour when scrolled:
+  ```css
+  /* White links over transparent/hero background */
+  #topnav:not(.scroll):not(.nav-sticky) .navigation-menu > li > a {
+    color: #ffffff !important;
+  }
+  #topnav:not(.scroll):not(.nav-sticky) .navigation-menu > li:hover > a {
+    color: rgba(255,255,255,0.75) !important;
+  }
+  /* Brand-coloured links on white scrolled background */
+  #topnav.scroll .navigation-menu > li > a,
+  #topnav.nav-sticky .navigation-menu > li > a {
+    color: #YOUR_PRIMARY_COLOR !important;
+  }
+  ```
+  Verify by checking the page both at the very top (over hero) and after scrolling down.
+- **⚠️ CRITICAL — Always use Mermaid for diagrams, never ASCII art:** ASCII art flow diagrams (`│`, `▼`, `├──►`) render as ugly monospace code blocks in the browser. Lotus Docs supports Mermaid natively — any fenced code block with language `mermaid` renders as an interactive diagram with zero configuration. Always use `flowchart`, `sequenceDiagram`, or `stateDiagram-v2`. See Phase 3.6 for patterns and examples.
+- **⚠️ CRITICAL — Use `relURL` in custom layouts, set `baseURL: "/"`:** Hardcoded absolute paths like `href="/docs/..."` in `layouts/index.html` break when the site is deployed to a GitHub Pages subdirectory. Always use `{{ "/path/" | relURL }}` for every internal link in custom layout files. Set `baseURL: "/"` in `hugo.yaml` and let CI override it with `--baseURL "${{ steps.pages.outputs.base_url }}/"`. See Phase 2.2 for details.
+- The top 5 features should be based off of killer features and this can only be determined by going through the code and assessing all the features and capabilities of the application and deciding (based on your knowledge and research) which are the most important and impactful features to highlight.  This is a critical step in the process and should not be skipped or done superficially.  You should spend significant time analyzing the application, its codebase, and any existing documentation to identify the top 5 features that will be highlighted on the homepage.  If there are more than 5, you may additionally include more but no more than 10!
+- Don't put too much into each page.  If a page is getting too long, split it into multiple pages and create a landing page with panels linking to each of the sub-pages.  This is a much better user experience than having one very long page with a giant table of contents.  It also allows you to provide more context and information about each topic on the landing page and guide users to the right place based on their needs and interests.
+- If there's anything you're not sure about, please ask for absolute guidance.
+- Use the latest version of hugo
 
 ## Technology Stack
 
@@ -124,8 +145,10 @@ hugo mod init github.com/{owner}/{repo}-docs
 
 **Create/update `hugo.yaml`:**
 
+> **⚠️ Important — baseURL:** Set `baseURL: "/"` (not a full URL). This ensures internal links work correctly regardless of where the site is hosted (root or subdirectory). The CI/CD deploy workflow overrides this with the actual URL via `--baseURL "${{ steps.pages.outputs.base_url }}/"`.
+
 ```yaml
-baseURL: "https://docs.example.com/"
+baseURL: "/"
 title: "Application Name Documentation"
 languageCode: "en-us"
 enableEmoji: true
@@ -188,9 +211,9 @@ markup:
   goldmark:
     renderer:
       unsafe: true
-  highlight:
-    style: monokai
-    lineNos: true
+#  highlight:
+#    style: monokai
+#    lineNos: true
 ```
 
 #### 2.3 Create Directory Structure
@@ -771,6 +794,16 @@ themes/lotusdocs/layouts/  # Theme's defaults (ignored if you have local)
 ```
 
 **Key principle**: Create `layouts/index.html` to completely replace the theme's homepage.
+
+> **⚠️ Important — Always use `relURL` for internal links in custom layouts:** Hardcoded paths like `href="/docs/..."` break when deployed to a GitHub Pages subdirectory. Use Hugo's `relURL` function for every internal link:
+> ```html
+> <!-- ❌ Breaks on subdirectory deployments -->
+> <a href="/docs/getting-started/">Get Started</a>
+>
+> <!-- ✅ Always works -->
+> <a href="{{ "/docs/getting-started/" | relURL }}">Get Started</a>
+> ```
+> After building, verify with: `grep 'href="https://' public/index.html` — there should be zero internal `https://` hrefs (only external links like GitHub).
 
 #### 3.5.3 Custom Homepage Template Structure
 
@@ -1401,6 +1434,125 @@ git commit -m "Homepage: Add new AI features section"
 
 ---
 
+### Phase 3.6: Mermaid Diagrams (Required — No ASCII Art)
+
+**Always use Mermaid for diagrams. Never use ASCII art.**
+
+ASCII art flow diagrams using characters like `│`, `▼`, `├──►` render as ugly fixed-width code blocks in the browser. Lotus Docs supports Mermaid natively — any fenced code block with language identifier `mermaid` is automatically rendered as a professional interactive diagram. No configuration is needed.
+
+#### Supported diagram types
+
+**Flowchart (process flows, pipelines):**
+````markdown
+```mermaid
+flowchart TD
+    A[Start] --> B{Decision?}
+    B -- Yes --> C[Do thing]
+    B -- No --> D[Do other thing]
+    C --> E[End]
+    D --> E
+```
+````
+
+**Sequence diagram (request/response, message flows):**
+````markdown
+```mermaid
+sequenceDiagram
+    participant S as Sender
+    participant T as Tunnel
+    participant R as Receiver
+
+    S->>T: Encrypted payload over HTTPS
+    T->>R: Forward to receiver
+    R->>R: Decrypt + verify
+    R-->>S: DELETE /item/{id}
+```
+````
+
+**State diagram (status transitions):**
+````markdown
+```mermaid
+stateDiagram-v2
+    [*] --> Queued
+    Queued --> Received: receiver downloads
+    Queued --> Deleted: sender removes
+    Received --> [*]
+    Deleted --> [*]
+```
+````
+
+**Left-to-right pipeline (simple linear flows):**
+````markdown
+```mermaid
+flowchart LR
+    A[Input] --> B[Process] --> C[Output]
+```
+````
+
+#### Conversion checklist
+
+Before finishing any page, scan for these patterns and convert to Mermaid:
+
+| ASCII pattern | Replace with |
+|---|---|
+| Vertical arrows (`│`, `▼`) | `flowchart TD` |
+| Branching (`├──`, `└──`) | `flowchart TD` with branch nodes |
+| Request/response flows | `sequenceDiagram` |
+| Status/state transitions | `stateDiagram-v2` |
+| Left-to-right pipelines | `flowchart LR` |
+
+---
+
+### Phase 3.7: Site-Wide CSS Injection
+
+To inject custom CSS into **every page** of the site (not just the homepage), override the theme's `head.html` partial.
+
+#### How to override
+
+1. Copy the theme's head partial from the vendor directory:
+```bash
+cp docs/learn/_vendor/github.com/colinwilson/lotusdocs/layouts/partials/head.html \
+   docs/learn/layouts/partials/head.html
+```
+
+2. Add a `<style>` block immediately before `</head>`:
+```html
+    <!-- Site-wide custom CSS -->
+    <style>
+      /* Your CSS here */
+    </style>
+</head>
+```
+
+Hugo's layout override system automatically picks up `layouts/partials/head.html` over the vendored theme version on every page.
+
+#### Required CSS: Navbar link colours
+
+This CSS **must always be included** to fix navbar link readability (replace `#YOUR_PRIMARY_COLOR` with your brand colour):
+
+```css
+/* White links over transparent/hero background (top of page) */
+#topnav:not(.scroll):not(.nav-sticky) .navigation-menu > li > a {
+  color: #ffffff !important;
+}
+#topnav:not(.scroll):not(.nav-sticky) .navigation-menu > li:hover > a {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+/* Brand-coloured links on white background (after scrolling) */
+#topnav.scroll .navigation-menu > li > a,
+#topnav.nav-sticky .navigation-menu > li > a {
+  color: #YOUR_PRIMARY_COLOR !important;
+}
+#topnav.scroll .navigation-menu > li:hover > a,
+#topnav.scroll .navigation-menu > li.active > a,
+#topnav.nav-sticky .navigation-menu > li:hover > a,
+#topnav.nav-sticky .navigation-menu > li.active > a {
+  color: #YOUR_SECONDARY_COLOR !important;
+}
+```
+
+---
+
 ### Phase 4: Deployment Setup
 
 #### 4.1 Create GitHub Actions Workflow
@@ -1440,7 +1592,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.153.2
+      HUGO_VERSION: 0.156.0
       TARGET_REPO: {owner}/{app-name}-docs
       TARGET_BRANCH: main
     steps:
@@ -1519,7 +1671,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.153.2
+      HUGO_VERSION: 0.156.0
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -1682,22 +1834,44 @@ hugo --gc --minify
 
 **Check for:**
 - ✅ No build errors
-- ✅ All pages generate
-- ✅ Links are valid
-- ✅ Images load correctly
+- ✅ All pages generate (check page count in output)
+- ✅ No WARNs about missing resources
 
-**Development server:**
+**Development server — use async shell to avoid race conditions:**
+
+> **⚠️ Important:** Do NOT run `hugo server` as a background process and immediately `curl` it. The server needs ~5 seconds to start. Use an async shell session, wait for the "Web Server is available" message, then run tests.
+
 ```bash
-hugo server -D
+# Start server in background (async shell)
+cd docs/learn
+hugo server --port 1313 --bind 127.0.0.1 --baseURL http://127.0.0.1:1313/ &
+sleep 5
+
+# Test every route — ALL must return 200
+for path in / /docs/ /docs/getting-started/ /docs/getting-started/installation/ \
+            /docs/getting-started/quickstart/ /docs/features/ /docs/security/ \
+            /docs/troubleshooting/ /docs/network/; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:1313$path")
+  bytes=$(curl -s "http://127.0.0.1:1313$path" | wc -c)
+  echo "$code ($bytes bytes) $path"
+done
 ```
 
-**Test:**
-- ✅ Navigation works
-- ✅ Search functions (if enabled)
-- ✅ Mobile responsive
-- ✅ All screenshots display
-- ✅ Internal links work
-- ✅ External links work
+**Expected output:** every route shows `200` with >50,000 bytes. A `200` with <10,000 bytes means the page is blank (empty section — see Common Pitfalls).
+
+**Critical checks:**
+- ✅ Every section URL returns 200 with substantial content (>50KB)
+- ✅ No section pages are blank (check by eye in browser)
+- ✅ Navbar links are readable over the hero background (white or light colour)
+- ✅ Navbar links are readable after scrolling (brand colour on white background)
+- ✅ All internal links on homepage work (click through in browser)
+- ✅ Mermaid diagrams render as visual diagrams, not code blocks
+
+**Validate internal links in built output:**
+```bash
+# Should return 0 lines — no internal links should be absolute https:// URLs
+grep 'href="https://' docs/learn/public/index.html | grep -v 'github.com\|jsdelivr\|cdn\.' | head -10
+```
 
 #### 5.2 Content Review
 
@@ -1710,6 +1884,9 @@ hugo server -D
 - [ ] Spell check completed
 - [ ] Technical accuracy verified
 - [ ] Clear navigation path
+- [ ] Every section has at least one child page (no empty sections)
+- [ ] No ASCII art diagrams — all converted to Mermaid
+- [ ] All internal links in `layouts/index.html` use `{{ "path" | relURL }}`
 
 #### 5.3 Cross-Browser Testing
 
@@ -1909,6 +2086,64 @@ Before you begin, ensure you have:
 ---
 
 ## Common Pitfalls & Solutions
+
+### Problem: Empty Section Pages
+
+**Symptom**: A section URL (e.g., `/docs/troubleshooting/`) returns 200 but the page appears completely blank — no content visible.
+
+**Cause**: The Lotus Docs `list.html` template only renders child page cards. It completely ignores the body content of `_index.md`. A section with content only in `_index.md` and no child pages will always render blank.
+
+**Solutions:**
+1. Create at least one named child `.md` file in the section directory (e.g., `troubleshooting/installation.md`)
+2. Move all body content from `_index.md` into child pages
+3. Keep `_index.md` to a 1–3 sentence overview only
+4. Verify: `curl -s http://127.0.0.1:1313/docs/section/ | wc -c` — should be >50,000 bytes
+
+### Problem: Landing Page Links 404 on GitHub Pages Subdirectory
+
+**Symptom**: Site builds and runs locally, but after deploying to GitHub Pages, all links on the custom homepage lead to 404.
+
+**Cause**: `layouts/index.html` uses hardcoded absolute paths like `href="/docs/..."`. When the site is hosted at a subdirectory (e.g., `https://user.github.io/repo-docs/`), these paths resolve to `/docs/...` at the root rather than `/repo-docs/docs/...`.
+
+**Solutions:**
+1. Replace every hardcoded internal `href` in custom layout files with Hugo's `relURL` function:
+   ```html
+   <!-- Before -->
+   <a href="/docs/getting-started/">...</a>
+   <!-- After -->
+   <a href="{{ "/docs/getting-started/" | relURL }}">...</a>
+   ```
+2. Set `baseURL: "/"` in `hugo.yaml`
+3. In the deploy workflow, pass the real URL: `--baseURL "${{ steps.pages.outputs.base_url }}/"`
+4. Validate: `grep 'href="https://' public/index.html` — zero internal https:// hrefs
+
+### Problem: ASCII Art Diagrams Render as Ugly Code Blocks
+
+**Symptom**: Flow diagrams using `│`, `▼`, `├──►` characters appear as monospace text blocks with no visual structure.
+
+**Cause**: These are plain text inside fenced code blocks — they have no special rendering.
+
+**Solution**: Convert all ASCII art to Mermaid diagrams. Lotus Docs supports Mermaid natively:
+````markdown
+```mermaid
+flowchart TD
+    A[Input] --> B[Process] --> C[Output]
+```
+````
+No configuration needed. The theme automatically loads the Mermaid JS library on any page that contains a `mermaid` code block.
+
+### Problem: Navbar Links Unreadable Over Hero or White Background
+
+**Symptom**: Navigation links at the top of the page are invisible or very hard to read — either because they're dark text on a dark/coloured hero, or too light on a white background after scrolling.
+
+**Cause**: The Lotus Docs theme defaults to `color: #3c4858` for nav links, which does not contrast well against coloured hero sections.
+
+**Solution**: Override `layouts/partials/head.html` (copy from `_vendor`) and add this CSS (see Phase 3.7 for full instructions):
+```css
+#topnav:not(.scroll):not(.nav-sticky) .navigation-menu > li > a { color: #ffffff !important; }
+#topnav.scroll .navigation-menu > li > a,
+#topnav.nav-sticky .navigation-menu > li > a { color: #YOUR_PRIMARY_COLOR !important; }
+```
 
 ### Problem: Git Submodules Error in GitHub Actions
 
