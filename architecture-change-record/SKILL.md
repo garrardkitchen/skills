@@ -1,22 +1,6 @@
 ---
 name: Architecture Change Record (ACR)
 description: Create professional architecture change records with UML diagrams, risk analysis, folder structure, and automatic index management
-allowedCommands:
-  - ls        # List directory contents and explore folder structure
-  - tree      # Generate visual folder structure (if available)
-  - find      # Find files and directories
-  - grep      # Search for content patterns in files
-  - cat       # Read file contents
-  - wc        # Count files, lines, and words
-  - git       # Check git status, history, and changes
-  - mkdir     # Create directories for ACR storage
-  - stat      # Get file and directory information
-  - pwd       # Print working directory
-  - basename  # Extract filename from path
-  - dirname   # Extract directory from path
-  - sort      # Sort file listings
-  - head      # Show first lines of files
-  - tail      # Show last lines of files
 ---
 
 # Architecture Change Record (ACR) Skill
