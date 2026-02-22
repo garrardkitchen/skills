@@ -7,6 +7,24 @@ description: Convert video recordings (mp4, mov, avi, etc.) to optimized GIFs wi
 
 When invoked, this skill converts a video recording into an optimized GIF and optionally blurs or masks sensitive regions (passwords, PII, API keys, faces, etc.) using ffmpeg and Python/Pillow.
 
+## General list of text to blur out:
+
+- http(s) URLs
+- Email addresses
+- File paths
+- usernames
+- Passwords (often in terminal output)
+- API keys, tokens, credentials
+- IDs
+- Human names
+- PII (Personally Identifiable Information)
+- Telephone numbers
+- Addresses
+- Machine names (e.g. server hostnames)
+- Company/organization names
+- GUIDs and UUIDs
+- Anything hypenated or snake_case that looks like a variable name
+
 ---
 
 ## Step 1: Gather User Input
@@ -190,7 +208,7 @@ import sys
 from PIL import Image, ImageFilter, ImageDraw
 
 # ── Configuration ──────────────────────────────────────────────────────────
-BLUR_RADIUS = 18      # Gaussian blur radius (higher = more obscured)
+BLUR_RADIUS = 6      # Gaussian blur radius (higher = more obscured) - was 18, changed to 4
 SOLID_FILL  = False   # Set True to use an opaque color block instead of blur
 FILL_COLOR  = (30, 30, 30)  # RGB color for solid fill (dark grey default)
 # ───────────────────────────────────────────────────────────────────────────
