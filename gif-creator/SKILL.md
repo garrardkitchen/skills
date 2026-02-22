@@ -23,7 +23,7 @@ When invoked, this skill converts a video recording into an optimized GIF and op
 - Machine names (e.g. server hostnames)
 - Company/organization names
 - GUIDs and UUIDs
-- Anything hypenated or snake_case that looks like a variable name
+- Anything hypenated
 
 ---
 
