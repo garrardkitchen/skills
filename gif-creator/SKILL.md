@@ -11,19 +11,28 @@ When invoked, this skill converts a video recording into an optimized GIF and op
 
 - http(s) URLs
 - Email addresses
-- File paths
+- File paths (eg. `/home/user/secret.txt` or `C:\Users\user\secret.txt`)
 - usernames
 - Passwords (often in terminal output)
 - API keys, tokens, credentials
-- IDs
 - Human names
 - PII (Personally Identifiable Information)
 - Telephone numbers
 - Addresses
 - Machine names (e.g. server hostnames)
 - Company/organization names
-- GUIDs and UUIDs
+- GUIDs and UUIDs and IDs (only when in JSoN or in a URL)
 - Anything hypenated
+
+
+## What not to blur out:
+
+- menu items
+- button
+- labels
+- lists of title followed by a description.
+
+**IMPORTANT**: Always ask before assuming something should be blurred. When in doubt, ask the user if they want a region masked.
 
 ---
 
