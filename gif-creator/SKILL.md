@@ -118,6 +118,7 @@ Use ffmpeg with a two-pass palette approach for the best color quality.
 | Preset | FPS | Width | Palette Colors |
 |--------|-----|-------|----------------|
 | small  | 10  | 480   | 128            |
+| small-high  | 10  | 1000   | 128            |
 | medium | 15  | 800   | 192            |
 | medium-high   | 15  | 1280  | 128     |
 | high   | 24  | 1280  | 256            |
