@@ -383,12 +383,12 @@ flowchart LR
 
 Use subgraphs, class definitions, icons in labels where helpful, and clear trust boundary labels. Build the diagram from discovered evidence: if Terraform shows Key Vault or private endpoints, add those nodes; if code shows tool registries, approval services, or model clients, add those nodes. Make it polished, but never invent components that were not found.
 
-When writing Mermaid nodes, use safe identifiers such as `rolesNode`, `approvalApi`, or `agentRuntime1`.
+When writing Mermaid nodes, use safe identifiers with alphanumeric camelCase names and no spaces, such as `rolesNode`, `approvalApi`, or `agentRuntime1`.
 
 When writing Mermaid labels:
 
 - prefer quoted labels such as `rolesNode["App roles / Authorize attribute"]`
-- do not place raw Mermaid delimiters inside labels, including `[`, `]`, `{`, `}`, `(`, and `)`, unless you intentionally use valid Mermaid shape syntax
+- do not place raw Mermaid delimiters inside labels, including `[`, `]`, `{`, `}`, `(`, and `)`
 - do not paste code fragments like `[Authorize]`, JSON, policy snippets, or Markdown links directly into node text
 - rewrite syntax-heavy labels into plain language, for example:
   - use `App roles / Authorize attribute` instead of `App roles / [Authorize]`
