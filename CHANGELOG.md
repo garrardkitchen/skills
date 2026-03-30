@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added `agentic-security-assessment/SKILL.md`, a reusable skill that assesses Terraform and application code against `ASI01` through `ASI10` in the Azure Agentic AI Security Baseline, generates a markdown assessment report, creates a styled Mermaid diagram, and documents gaps with technology-specific implementation links.
+- Added `docs/compliance/azure-compliance-baseline.md`, a draft policy-style Azure compliance baseline covering ISO 27001, GDPR, UK GDPR, and EU AI Act requirements for identity, infrastructure, applications, and internet-facing versus internal services.
+- Added a `References` section to `docs/compliance/azure-compliance-baseline.md` with UK public-sector and legislation source URLs.
+- Added `docs/compliance/azure-agentic-ai-security-baseline.md`, a draft Azure security baseline for agentic AI applications mapped to the OWASP Top 10 for Agentic Applications, covering identity, infrastructure, tools, memory, inter-agent communication, and containment controls.
+- Added contents sections to both Azure compliance baseline documents for easier navigation across H1, H2, and H3 headings.
+
+### Changed
+- Hardened `agentic-security-assessment/SKILL.md` Mermaid guidance so generated diagrams use Mermaid-safe node labels, avoid raw bracket syntax in label text, and include a final parseability sanity check.
+
 ## [1.0.0] - 2026-01-04
 
 ### Added
@@ -41,5 +51,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Discussion point summarization
   - Professional output formatting
 
-[Unreleased]: https://github.com/yourusername/claude-skills/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yourusername/claude-skills/releases/tag/v1.0.0
+[Unreleased]: https://github.com/garrardkitchen/claude-skills/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/garrardkitchen/claude-skills/releases/tag/v1.0.0
