@@ -1,5 +1,5 @@
 ---
-name: Architecture Change Record (ACR)
+name: Architecture-Change-Record
 description: Create professional architecture change records with UML diagrams, risk analysis, folder structure, and automatic index management
 ---
 

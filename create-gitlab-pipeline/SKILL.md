@@ -379,8 +379,14 @@ create_release:
         [ -z "$line" ] && continue
         SUBJECT="${line%|||*}"
         AUTHOR="${line##*|||}"
+        # Skip merge commits
         case "$SUBJECT" in
           Merge*) continue ;;
+        esac
+        # Skip branch-name-style commit messages e.g. "Fix/username/description"
+        # These are auto-generated MR titles from branch names — not useful in a changelog
+        case "$SUBJECT" in
+          Fix/*|fix/*|Feat/*|feat/*|Feature/*|feature/*|Chore/*|chore/*|Docs/*|docs/*|Refactor/*|refactor/*|Test/*|test/*|Perf/*|perf/*) continue ;;
         esac
         ENTRY="- ${SUBJECT} [${AUTHOR}]\n"
         case "$SUBJECT" in

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added `agentic-security-assessment/SKILL.md`, a reusable skill that assesses Terraform and application code against `ASI01` through `ASI10` in the Azure Agentic AI Security Baseline, generates a markdown assessment report, creates a styled Mermaid diagram, and documents gaps with technology-specific implementation links.
+- Added `azure-compliance-assessment/SKILL.md`, a reusable skill that assesses or proves alignment against `docs/compliance/azure-compliance-baseline.md`, asks the user to choose assessment or proof mode, generates emoji-based markdown compliance tables, and produces a styled Mermaid diagram showing where controls are addressed across infrastructure and application layers.
 - Added `docs/compliance/azure-compliance-baseline.md`, a draft policy-style Azure compliance baseline covering ISO 27001, GDPR, UK GDPR, and EU AI Act requirements for identity, infrastructure, applications, and internet-facing versus internal services.
 - Added a `References` section to `docs/compliance/azure-compliance-baseline.md` with UK public-sector and legislation source URLs.
 - Added `docs/compliance/azure-agentic-ai-security-baseline.md`, a draft Azure security baseline for agentic AI applications mapped to the OWASP Top 10 for Agentic Applications, covering identity, infrastructure, tools, memory, inter-agent communication, and containment controls.
