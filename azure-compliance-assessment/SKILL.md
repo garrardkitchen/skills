@@ -1,13 +1,13 @@
 ---
 name: azure-compliance-assessment
-description: Assess or prove alignment against the Azure Compliance Baseline for ISO 27001, GDPR, UK GDPR, and EU AI Act using infrastructure and application evidence, then produce markdown tables and a styled Mermaid diagram.
+description: Assess or prove Azure Compliance Baseline alignment for ISO 27001, GDPR, UK GDPR, and EU AI Act using Terraform, infrastructure, application, privacy, identity, and AI-governance evidence. Use for Azure compliance assessments, proof packs, ISO/GDPR/UK GDPR/EU AI Act readiness, Terraform/application compliance gaps, markdown reports, and Mermaid diagrams.
 ---
 
 # Azure Compliance Assessment Skill
 
 ## Overview
 
-Use this skill to assess a repository against `Users/kitcheng/.claude/skills/docs/compliance/azure-compliance-baseline.md`.
+Use this skill to assess a repository against `docs/compliance/azure-compliance-baseline.md`.
 
 This skill is designed for Azure-hosted or Azure-integrated services and MUST:
 
@@ -18,10 +18,42 @@ This skill is designed for Azure-hosted or Azure-integrated services and MUST:
 - map evidence to the baseline's control areas across identity, infrastructure, applications, privacy, and AI governance
 - create a markdown report with a mode-specific compliance table
 - generate a styled, colorized Mermaid diagram of where the controls are addressed in the solution
+- keep the report decision-ready for humans by leading with a compact executive snapshot, top concerns or proven controls, and then detailed evidence
 
 The default report location is:
 
 `docs/compliance/assessments/`
+
+---
+
+## GPT-5.5 Output Principles
+
+When generating the assessment, optimize for a human reader who needs to understand compliance posture quickly:
+
+- lead with the mode, overall posture, and the most important conclusion
+- keep `assessment` and `proof` semantics distinct
+- keep tables concise; move long evidence into detailed findings
+- group repeated gaps instead of repeating the same recommendation under every domain
+- separate missing controls from missing evidence
+- avoid speculative compliance claims; every pass or proof must cite code, Terraform, enforceable configuration, or explicitly permitted supporting evidence
+- use direct, balanced language suitable for security, engineering, privacy, legal, and governance stakeholders
+
+Use these concern markers consistently in assessment mode and recommendation tables:
+
+| Marker | Meaning | Use when |
+|--------|---------|----------|
+| 🔴 Critical concern | Required control absent or high-impact compliance risk | A core control is plainly absent, internet-facing exposure is materially weak, or personal-data / AI-governance risk is significant |
+| 🟠 Material gap | Important implementation gap | A control is partial, weak, or missing for a significant workflow |
+| 🟡 Evidence gap | Not proven from assessed scope | The control may exist elsewhere, but code/config evidence is missing |
+| 🟢 Strength | Strong implementation evidence | The control is clearly implemented with enforceable evidence |
+
+Also assign an evidence strength of `High`, `Medium`, or `Low`:
+
+- `High`: direct Terraform, application code, or enforceable configuration proves the conclusion
+- `Medium`: direct evidence exists but is incomplete, split across layers, or has unresolved scope limits
+- `Low`: only secondary evidence exists, or the conclusion is mainly based on absence of evidence
+
+In proof mode, use `Evidence Strength` to show how strong each proven control is. Do not use concern markers in the proof compliance table because proof mode intentionally omits failed, partial, and unproven controls.
 
 ---
 
@@ -37,10 +69,13 @@ Before running the assessment, ask the user:
 6. **Output file name**: Use the default date-based report name, or a custom report name?
 7. **Technology emphasis**: Are there known stacks to prioritize (for example `.NET`, `Python`, `Node.js`, `AKS`, `Terraform`, `Container Apps`, `Functions`, `App Service`, `Azure Front Door`, `API Management`)?
 8. **Evidence strictness**: Should the report only count code/config evidence, or also include supporting evidence from docs and CI/CD configuration?
+9. **Report tone**: Use the default balanced tone, or prefer executive, engineering, privacy/legal, or formal assurance wording?
 
 If the user already provided enough detail, do not re-ask answered questions.
 
 If the user does not express a preference for mode, recommend `assessment`.
+
+If the user does not express a report tone preference, use a balanced tone.
 
 ---
 
@@ -208,6 +243,7 @@ For each relevant baseline control area:
    - key functions, resources, classes, modules, or configuration blocks
    - whether the evidence is primarily infrastructure, application, or supporting evidence
    - a short explanation of why the evidence maps to the baseline
+   - concern marker and evidence strength
 5. If there is no evidence, say so explicitly
 
 Do not over-credit intent. A TODO comment, design aspiration, or vague README note is not enough to mark a control as met.
@@ -349,13 +385,15 @@ The report MUST include the following sections:
 ```markdown
 # Azure Compliance Assessment: [Repository or Service Name]
 
-## Summary
+## Executive Snapshot
 
 ## Mode
 
 ## Scope
 
 ## Assessed Architecture Overview
+
+## Top Concerns or Proven Controls
 
 ## Compliance Table
 
@@ -367,10 +405,12 @@ The report MUST include the following sections:
 
 ## Implementation Links
 
-## References
+## Standards and References
 ```
 
-### 1. Summary
+The following subsections describe how to populate each report section in order.
+
+### 1. Executive Snapshot
 
 Include:
 
@@ -379,6 +419,9 @@ Include:
 - whether the implementation appears internet-facing, internal-only, or mixed
 - most important strengths
 - most important failures or missing proof points
+- in assessment mode, a count of passed / failed or not proven / not relevant rows
+- in proof mode, a count of proven controls and a warning that omitted controls are not proven
+- a short reading guide that explains the concern markers when assessment findings or recommendations use them
 
 ### 2. Mode
 
@@ -399,20 +442,34 @@ Include:
 - any excluded areas
 - whether supporting evidence was counted
 
-### 4. Compliance Table
+### 4. Top Concerns or Proven Controls
+
+In assessment mode, include a compact top-concerns table before the full compliance table. Limit it to the top 3 unless there is a clear reason to show up to 5.
+
+| Priority | Domain | Control Area | Why it matters | Evidence |
+|----------|--------|--------------|----------------|----------|
+| 🔴 Critical concern | Application baseline | Explicit application authorization | Internet-facing APIs expose sensitive operations, but role/scope checks were not found | `src/api/orders.ts`, `infra/apim.tf` |
+
+In proof mode, include a compact top-proven-controls table showing the strongest evidence areas:
+
+| Proven Area | Domain | Evidence Strength | Why it matters | Evidence |
+|-------------|--------|-------------------|----------------|----------|
+| Workload identity | Identity and access | High | App Service uses managed identity and avoids static secrets | `infra/app-service.tf`, `src/config/auth.ts` |
+
+### 5. Compliance Table
 
 In assessment mode, use a table like:
 
-| Domain | Control Area | Result | Infra Evidence | Application Evidence | Notes |
-|--------|--------------|--------|----------------|----------------------|-------|
-| Identity and access | MFA and Conditional Access for human users | ✅ | `infra/entra.tf` | `src/auth/config.ts` | Human sign-in protections are enforced through Entra and app validation |
-| Application baseline | Explicit application authorization | ❌ | `infra/apim.tf` | `src/api/orders.ts` | API gateway exists, but app code does not enforce role checks on sensitive routes |
+| Domain | Control Area | Result | Concern | Evidence Strength | Infra Evidence | Application Evidence | Notes |
+|--------|--------------|--------|---------|-------------------|----------------|----------------------|-------|
+| Identity and access | MFA and Conditional Access for human users | ✅ | 🟢 Strength | High | `infra/entra.tf` | `src/auth/config.ts` | Human sign-in protections are enforced through Entra and app validation |
+| Application baseline | Explicit application authorization | ❌ | 🔴 Critical concern | High | `infra/apim.tf` | `src/api/orders.ts` | API gateway exists, but app code does not enforce role checks on sensitive routes |
 
 In proof mode, use a table like:
 
-| Domain | Proven Control Area | Result | Infra Evidence | Application Evidence | Notes |
-|--------|---------------------|--------|----------------|----------------------|-------|
-| Identity and access | Explicit application authorization | ✅ | `infra/apim.tf` | `src/api/orders.ts` | Role checks are enforced in code and token validation is present |
+| Domain | Proven Control Area | Result | Evidence Strength | Infra Evidence | Application Evidence | Notes |
+|--------|---------------------|--------|-------------------|----------------|----------------------|-------|
+| Identity and access | Explicit application authorization | ✅ | High | `infra/apim.tf` | `src/api/orders.ts` | Role checks are enforced in code and token validation is present |
 
 Rules:
 
@@ -421,18 +478,25 @@ Rules:
 - do not include a failed row in proof mode
 - keep control-area wording faithful to the baseline
 
-### 5. Detailed Findings
+### 6. Detailed Findings
 
 For each domain include:
 
 - the control area
 - whether it passed, failed, or was not proven
+- concern marker and evidence strength where relevant
 - where it is addressed
 - exact evidence with file paths
 - why the evidence counts
 - what is missing or still unproven
 
-### 6. Current-State Mermaid Diagram
+Keep each detailed finding skimmable:
+
+- start with one sentence naming the conclusion
+- use no more than 3-5 evidence bullets unless the user asks for exhaustive evidence
+- put detailed implementation links in the recommendations and references sections, not inside every finding
+
+### 7. Current-State Mermaid Diagram
 
 Create a Mermaid diagram that captures where the relevant compliance points are addressed across infrastructure and application components.
 
@@ -477,13 +541,13 @@ When writing Mermaid labels:
 - rewrite syntax-heavy labels into plain language
 - keep labels short; move detailed evidence into surrounding prose instead of the diagram
 
-### 7. Gaps and Recommendations
+### 8. Gaps and Recommendations
 
 This section MUST include a table for failed or unproven control areas:
 
-| Domain | Gap | Impact | Evidence Layer | Recommended Implementation | Best-Practice Links |
-|--------|-----|--------|----------------|----------------------------|---------------------|
-| Identity and access | No application role checks on sensitive API routes | High | Application | Add explicit role and scope checks in the API and align them with Entra app roles | [Microsoft Learn](...), [Framework auth docs](...) |
+| Priority | Domain | Gap | Impact | Evidence Layer | Recommended Implementation | Best-Practice Links |
+|----------|--------|-----|--------|----------------|----------------------------|---------------------|
+| 🔴 Critical concern | Identity and access | No application role checks on sensitive API routes | High | Application | Add explicit role and scope checks in the API and align them with Entra app roles | [Microsoft Learn](...), [Framework auth docs](...) |
 
 Rules:
 
@@ -491,8 +555,9 @@ Rules:
 - do not present omitted proof-mode rows as if they are compliant
 - choose implementation links appropriate to the detected stack
 - prefer official documentation for Azure, Terraform, and the app framework
+- show the recommended next change first; avoid long remediation essays in the table
 
-### 8. Implementation Links
+### 9. Implementation Links
 
 Also include a short grouped link section by technology, such as:
 
@@ -502,6 +567,29 @@ Also include a short grouped link section by technology, such as:
 - logging and monitoring
 - application framework security
 - privacy and AI governance guidance
+
+### 10. Standards and References
+
+End the report with concise citations to the official or authoritative sources used for the assessment.
+
+Include references when relevant to the findings:
+
+- Azure Compliance Baseline from the assessed repository or skill repository
+- ISO 27001 readiness context and authoritative security guidance used by the baseline
+- UK GDPR, GDPR, and Data Protection Act 2018 sources for privacy-related findings
+- EU AI Act or official AI-governance sources for AI-related findings
+- Microsoft Learn guidance for Azure services found in the repository
+- HashiCorp Terraform provider or module documentation for relevant IaC controls
+- official language or framework security documentation for the detected application stack
+- internal governance standards only when the user provides them or they are present in the repository
+
+Rules:
+
+- keep citations at the end so they support the assessment without interrupting the main narrative
+- include concise end references plus per-gap best-practice links
+- cite only sources that are relevant to the actual findings or recommendations
+- prefer stable official documentation over blogs or generic articles
+- do not imply formal certification, audit opinion, or legal determination from citations alone
 
 ---
 
@@ -568,4 +656,5 @@ This skill is complete only when it has:
 6. included a colored Mermaid diagram
 7. documented real gaps and recommendations
 8. attached implementation links appropriate to the detected technology
-9. verified that the report includes Summary, Mode, Scope, Architecture Overview, Compliance Table, Detailed Findings, Mermaid Diagram, Gaps and Recommendations, Implementation Links, and References
+9. included concise standards and references citations
+10. verified that the report includes Executive Snapshot, Mode, Scope, Architecture Overview, Top Concerns or Proven Controls, Compliance Table, Detailed Findings, Mermaid Diagram, Gaps and Recommendations, Implementation Links, and Standards and References

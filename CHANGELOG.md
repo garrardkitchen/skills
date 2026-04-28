@@ -10,12 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `agentic-security-assessment/SKILL.md`, a reusable skill that assesses Terraform and application code against `ASI01` through `ASI10` in the Azure Agentic AI Security Baseline, generates a markdown assessment report, creates a styled Mermaid diagram, and documents gaps with technology-specific implementation links.
 - Added `azure-compliance-assessment/SKILL.md`, a reusable skill that assesses or proves alignment against `docs/compliance/azure-compliance-baseline.md`, asks the user to choose assessment or proof mode, generates emoji-based markdown compliance tables, and produces a styled Mermaid diagram showing where controls are addressed across infrastructure and application layers.
+- Added `dotnet-agentic-security/`, a modular skill for secure `.NET` and `ASP.NET Core` development that covers OWASP agentic and web risks, HTTP APIs, Microsoft Agent Framework workflows, `Azure.Identity`, architecture patterns, data access, testing, observability, and script-style app guidance through progressively loaded reference markdown files.
 - Added `docs/compliance/azure-compliance-baseline.md`, a draft policy-style Azure compliance baseline covering ISO 27001, GDPR, UK GDPR, and EU AI Act requirements for identity, infrastructure, applications, and internet-facing versus internal services.
 - Added a `References` section to `docs/compliance/azure-compliance-baseline.md` with UK public-sector and legislation source URLs.
 - Added `docs/compliance/azure-agentic-ai-security-baseline.md`, a draft Azure security baseline for agentic AI applications mapped to the OWASP Top 10 for Agentic Applications, covering identity, infrastructure, tools, memory, inter-agent communication, and containment controls.
 - Added contents sections to both Azure compliance baseline documents for easier navigation across H1, H2, and H3 headings.
 
 ### Changed
+- Improved `agentic-security-assessment/SKILL.md` for GPT-5.5-oriented assessment output with executive-first reporting, concern markers, evidence-strength labels, top-concern prioritisation, and concise standards/reference citations.
+- Improved `azure-compliance-assessment/SKILL.md` for GPT-5.5-oriented assessment and proof outputs with executive-first reporting, concern markers, evidence-strength labels, top-concern or proven-control prioritisation, and concise standards/reference citations.
+- Expanded `dotnet-agentic-security/references/data/ef-core-and-provider-switching.md` with project scaffolding commands, `dotnet ef` migration workflow, and seed data examples.
+- Expanded `dotnet-agentic-security` testing guidance with programmatic `Testcontainers` examples and added library guidance for `Refit`, `FluentValidation`, and `Spectre.Console.Cli`.
 - Hardened `agentic-security-assessment/SKILL.md` Mermaid guidance so generated diagrams use Mermaid-safe node labels, avoid raw bracket syntax in label text, and include a final parseability sanity check.
 
 ## [1.0.0] - 2026-01-04
