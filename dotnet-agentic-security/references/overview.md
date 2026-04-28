@@ -14,7 +14,7 @@ It is opinionated in favor of:
 ## Core themes
 
 - OWASP Agentic Top 10 (`ASI01`-`ASI10`)
-- OWASP Top 10 2025 mitigation guidance
+- OWASP Top Ten Web Application Security Risks 2025 mitigation guidance
 - OWASP API Security Top 10 2023 mitigation guidance
 - OWASP ASVS v5.0.0-aligned verification thinking for implementation completeness
 - ASP.NET Core API best practices
@@ -70,7 +70,7 @@ Do not let lower-priority polish, such as project layout or documentation, distr
 
 Use official sources when giving security-critical guidance:
 
-- OWASP Top 10 2025, OWASP API Security Top 10 2023, OWASP ASVS v5.0.0, and OWASP Cheat Sheet Series
+- OWASP Top Ten Web Application Security Risks 2025, OWASP API Security Top 10 2023, OWASP ASVS v5.0.0, and OWASP Cheat Sheet Series
 - Microsoft Learn for ASP.NET Core security, authorization, CORS, antiforgery, Data Protection, rate limiting, and error handling
 - Microsoft Learn for .NET secure coding and Azure SDK authentication
 - Microsoft Learn for EF Core concurrency, transactions, performance, and provider behavior

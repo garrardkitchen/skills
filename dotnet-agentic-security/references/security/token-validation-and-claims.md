@@ -33,11 +33,16 @@ builder.Services
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Orders.UserRead", policy =>
-        policy.RequireClaim("scp", "orders.read"));
+        policy.RequireAssertion(context => HasScope(context.User, "orders.read")));
 
     options.AddPolicy("Orders.AppRead", policy =>
         policy.RequireClaim("roles", "Orders.Read.All"));
 });
+
+static bool HasScope(ClaimsPrincipal user, string scope) =>
+    user.FindFirst("scp")?.Value
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Contains(scope, StringComparer.Ordinal) == true;
 ```
 
 Use delegated scopes for user-on-behalf-of flows. Use app roles/application permissions for app-only service calls. Do not let a broad app-only token call user-specific endpoints unless the design explicitly allows it.

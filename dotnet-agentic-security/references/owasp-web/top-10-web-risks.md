@@ -1,8 +1,8 @@
-# OWASP Web and API Mitigations for ASP.NET Core
+# OWASP Top Ten Web Application Security Risks and API Mitigations for ASP.NET Core
 
 Use this file when the user asks for web application security guidance, API security, or classic OWASP mitigations.
 
-This file maps OWASP Top 10 2025 and OWASP API Security Top 10 2023 risk families to practical ASP.NET Core mitigations. Treat access control, API object authorization, and tenant isolation as first-priority implementation concerns.
+This file maps OWASP Top Ten Web Application Security Risks 2025 and OWASP API Security Top 10 2023 risk families to practical ASP.NET Core mitigations. Treat access control, API object authorization, and tenant isolation as first-priority implementation concerns.
 
 ## Web risk-to-mitigation map
 
@@ -39,27 +39,34 @@ This file maps OWASP Top 10 2025 and OWASP API Security Top 10 2023 risk familie
 ### Broken access control
 
 ```csharp
+// Delegated user-token example. App-only callers should use a separate `roles` policy.
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Orders.Read", policy => policy.RequireClaim("scp", "orders.read"));
+    options.AddPolicy("Orders.ScopeRead", policy =>
+        policy.RequireAssertion(context => HasScope(context.User, "orders.read")));
 });
+
+static bool HasScope(ClaimsPrincipal user, string scope) =>
+    user.FindFirst("scp")?.Value
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Contains(scope, StringComparer.Ordinal) == true;
 
 app.MapGet("/orders/{id:guid}", async (Guid id, ClaimsPrincipal user, IOrderReader reader) =>
 {
-    OrderDto? order = await reader.GetAsync(id);
+    Order? order = await reader.GetAsync(id);
     if (order is null) return Results.NotFound();
 
-    if (order.OwnerObjectId != user.FindFirst("oid")?.Value && !user.IsInRole("OrdersAdmin"))
+    if (order.OwnerObjectId != user.FindFirst("oid")?.Value)
         return Results.Forbid();
 
-    return Results.Ok(order);
+    return Results.Ok(OrderDto.From(order));
 })
-.RequireAuthorization("Orders.Read");
+.RequireAuthorization("Orders.ScopeRead");
 ```
 
 When using Microsoft Entra ID access tokens with `MapInboundClaims = false`, prefer the `scp` claim name for delegated scopes.
 
-For app-only tokens, validate `roles` or app permissions instead of `scp`. For every endpoint that accepts an object ID, enforce resource ownership or tenant membership in application code; endpoint-level authentication is not enough.
+For app-only tokens, validate `roles` or app permissions with a separate policy instead of `scp`. For every endpoint that accepts an object ID, enforce resource ownership or tenant membership in application code; endpoint-level authentication is not enough.
 
 ### Cryptographic failures
 
@@ -141,7 +148,7 @@ app.Use(async (context, next) =>
 
 Never expose Swagger/OpenAPI, health details, developer exception pages, debug endpoints, or management endpoints publicly in production unless explicitly protected and approved.
 
-### Vulnerable components
+### Software supply chain failures
 
 ```xml
 <!-- Directory.Packages.props -->
@@ -237,37 +244,80 @@ app.Use(async (context, next) =>
 ### SSRF
 
 ```csharp
+// Validation gate only. Pair with egress firewall/proxy controls or a
+// rebinding-resistant HTTP handler before sending the outbound request.
+using System.Net;
+using System.Net.Sockets;
+
 public static class SafeUriPolicy
 {
-    private static readonly HashSet<string> AllowedHosts =
-    [
+    private static readonly HashSet<string> AllowedHosts = new(StringComparer.OrdinalIgnoreCase)
+    {
         "api.contoso.com",
         "graph.microsoft.com"
-    ];
+    };
 
-    public static Uri ValidateExternalUri(string candidate)
+    public static async Task<Uri> ValidateExternalUriAsync(string candidate, CancellationToken cancellationToken)
     {
         if (!Uri.TryCreate(candidate, UriKind.Absolute, out Uri? uri))
             throw new InvalidOperationException("Invalid URI.");
 
+        if (uri.Scheme != Uri.UriSchemeHttps || (!uri.IsDefaultPort && uri.Port != 443))
+            throw new InvalidOperationException("Only HTTPS destinations on port 443 are allowed.");
+
         if (!AllowedHosts.Contains(uri.Host))
             throw new InvalidOperationException("Host not allowlisted.");
 
+        IPAddress[] addresses = await Dns.GetHostAddressesAsync(uri.IdnHost, cancellationToken);
+        if (addresses.Length == 0 || addresses.Any(IsPrivateOrLoopback))
+            throw new InvalidOperationException("Destination resolves to a private or loopback address.");
+
         return uri;
     }
+
+    private static bool IsPrivateOrLoopback(IPAddress address)
+    {
+        if (IPAddress.IsLoopback(address))
+            return true;
+
+        if (address.AddressFamily == AddressFamily.InterNetwork)
+        {
+            byte[] bytes = address.GetAddressBytes();
+            return bytes[0] == 10
+                || bytes[0] == 127
+                || (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                || (bytes[0] == 192 && bytes[1] == 168)
+                || (bytes[0] == 169 && bytes[1] == 254);
+        }
+
+        if (address.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            byte[] bytes = address.GetAddressBytes();
+            bool isUniqueLocal = (bytes[0] & 0xfe) == 0xfc;
+            return address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || isUniqueLocal;
+        }
+
+        return false;
+    }
 }
+
+builder.Services.AddHttpClient("approved-outbound")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AllowAutoRedirect = false
+    });
 ```
 
-An outbound allowlist MUST include scheme, host, port, and destination class checks where SSRF matters. Do not allow user input to reach internal metadata endpoints, private address ranges, or arbitrary redirects.
+An outbound allowlist MUST include scheme, host, port, and destination class checks where SSRF matters. DNS validation alone is not a complete SSRF defense because the actual connection can resolve the hostname again; pair application checks with rebinding-resistant egress controls such as an approved outbound proxy, firewall rules, or a handler that pins the validated destination. Disable automatic redirects; if redirects are intentionally allowed, validate each `Location` target with the same policy before following it. Do not allow user input to reach internal metadata endpoints, private address ranges, or arbitrary redirects.
 
 ## Coverage check
 
-This file includes practical mitigation guidance for OWASP Top 10 2025 and OWASP API Security Top 10 2023 risk families:
+This file includes practical mitigation guidance for OWASP Top Ten Web Application Security Risks 2025 and OWASP API Security Top 10 2023 risk families:
 
 1. Broken access control
-2. Cryptographic failures
-3. Injection
-4. Insecure design
+2. Security misconfiguration
+3. Software supply chain failures
+4. Cryptographic failures
 5. Injection
 6. Insecure design
 7. Authentication failures
@@ -288,7 +338,7 @@ This file includes practical mitigation guidance for OWASP Top 10 2025 and OWASP
 
 ## Sources
 
-- OWASP Top 10 2025
+- OWASP Top Ten Web Application Security Risks 2025
 - OWASP API Security Top 10 2023
 - OWASP ASVS v5.0.0
 - OWASP Authorization, Authentication, REST, and .NET Security Cheat Sheets

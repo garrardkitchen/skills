@@ -73,4 +73,4 @@ dotnet nuget list source
 - Microsoft Learn NuGet package management and package source mapping
 - GitHub Advanced Security and Dependabot documentation
 - OWASP Software Component Verification Standard and Dependency-Track concepts
-- OWASP Top 10 2025 Software Supply Chain Failures
+- OWASP Top Ten Web Application Security Risks 2025 Software Supply Chain Failures

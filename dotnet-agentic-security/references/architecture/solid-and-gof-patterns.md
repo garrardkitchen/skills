@@ -370,7 +370,9 @@ Outbox dispatchers must be idempotent and should avoid putting secrets or unnece
 Use for resource-based authorization and BOLA prevention.
 
 ```csharp
-public sealed class OrderOwnerRequirement : IAuthorizationRequirement;
+public sealed class OrderOwnerRequirement : IAuthorizationRequirement
+{
+}
 
 public sealed class OrderOwnerHandler : AuthorizationHandler<OrderOwnerRequirement, Order>
 {
@@ -380,13 +382,17 @@ public sealed class OrderOwnerHandler : AuthorizationHandler<OrderOwnerRequireme
         Order resource)
     {
         string? objectId = context.User.FindFirst("oid")?.Value;
-        if (resource.OwnerObjectId == objectId || context.User.IsInRole("OrdersAdmin"))
+        if (resource.OwnerObjectId == objectId || HasAppRole(context.User, "Orders.Admin"))
         {
             context.Succeed(requirement);
         }
 
         return Task.CompletedTask;
     }
+
+    private static bool HasAppRole(ClaimsPrincipal user, string role) =>
+        // Requires JWT bearer configuration with MapInboundClaims = false or RoleClaimType = "roles".
+        user.FindAll("roles").Any(claim => claim.Value == role);
 }
 ```
 
