@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Improved `agentic-security-assessment/SKILL.md` for GPT-5.5-oriented assessment output with executive-first reporting, concern markers, evidence-strength labels, top-concern prioritisation, and concise standards/reference citations.
 - Improved `azure-compliance-assessment/SKILL.md` for GPT-5.5-oriented assessment and proof outputs with executive-first reporting, concern markers, evidence-strength labels, top-concern or proven-control prioritisation, and concise standards/reference citations.
+- Expanded `dotnet-agentic-security` with additional security reference files for authorization, token validation, SSRF, uploads, cryptography, supply chain, privacy, RAG/memory, Semantic Kernel and Azure AI, security testing, Azure hosting, browser security, audit/incident response, and storage security.
+- Strengthened `dotnet-agentic-security` reference guidance with implementation-priority loading rules, production `MUST` guidance, C# examples, verification checks, anti-patterns, and authoritative OWASP and Microsoft source references.
+- Pinned `dotnet-agentic-security` OWASP ASVS references to ASVS v5.0.0 and corrected misleading security examples around Zip Slip checks, rate limiting middleware, antiforgery, tenant context, and Azure credential selection.
 - Expanded `dotnet-agentic-security/references/data/ef-core-and-provider-switching.md` with project scaffolding commands, `dotnet ef` migration workflow, and seed data examples.
 - Expanded `dotnet-agentic-security` testing guidance with programmatic `Testcontainers` examples and added library guidance for `Refit`, `FluentValidation`, and `Spectre.Console.Cli`.
 - Hardened `agentic-security-assessment/SKILL.md` Mermaid guidance so generated diagrams use Mermaid-safe node labels, avoid raw bracket syntax in label text, and include a final parseability sanity check.
