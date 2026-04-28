@@ -23,7 +23,7 @@ flowchart LR
   subgraph Core["Core Guidance"]
     Skill["dotnet-agentic-security"]
     OwaspAgentic["OWASP Agentic Top 10"]
-    OwaspWeb["OWASP Web Top 10"]
+    OwaspWeb["OWASP Top Ten Web Application Security Risks 2025"]
     OwaspApi["OWASP API Security Top 10 2023"]
     Asvs["OWASP ASVS v5.0.0"]
     HttpApis["HTTP API Best Practices"]

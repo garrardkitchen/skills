@@ -16,7 +16,9 @@ Access control is the first implementation priority for most APIs. Authenticatio
 ## Resource-based authorization
 
 ```csharp
-public sealed class CanReadOrderRequirement : IAuthorizationRequirement;
+public sealed class CanReadOrderRequirement : IAuthorizationRequirement
+{
+}
 
 public sealed class CanReadOrderHandler(ICurrentTenant currentTenant)
     : AuthorizationHandler<CanReadOrderRequirement, Order>
@@ -30,13 +32,17 @@ public sealed class CanReadOrderHandler(ICurrentTenant currentTenant)
         string? tenantId = currentTenant.TenantId;
 
         if (resource.TenantId == tenantId &&
-            (resource.OwnerObjectId == objectId || context.User.IsInRole("OrdersAdmin")))
+            (resource.OwnerObjectId == objectId || HasAppRole(context.User, "Orders.Admin")))
         {
             context.Succeed(requirement);
         }
 
         return Task.CompletedTask;
     }
+
+    private static bool HasAppRole(ClaimsPrincipal user, string role) =>
+        // Requires JWT bearer configuration with MapInboundClaims = false or RoleClaimType = "roles".
+        user.FindAll("roles").Any(claim => claim.Value == role);
 }
 ```
 
@@ -45,11 +51,11 @@ Resolve the application's tenant from your membership model or tenant-routing la
 ```csharp
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Orders.Read", policy =>
+    options.AddPolicy("Orders.ResourceRead", policy =>
         policy.Requirements.Add(new CanReadOrderRequirement()));
 });
 
-builder.Services.AddSingleton<IAuthorizationHandler, CanReadOrderHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CanReadOrderHandler>();
 ```
 
 ## Endpoint pattern
@@ -66,7 +72,7 @@ app.MapGet("/api/orders/{id:guid}", async (
     if (order is null)
         return Results.NotFound();
 
-    AuthorizationResult allowed = await authorization.AuthorizeAsync(user, order, "Orders.Read");
+    AuthorizationResult allowed = await authorization.AuthorizeAsync(user, order, "Orders.ResourceRead");
     return allowed.Succeeded ? Results.Ok(OrderDto.From(order)) : Results.Forbid();
 })
 .RequireAuthorization();

@@ -42,13 +42,21 @@ CORS is not an authorization control. Use the narrowest allowed origins, methods
 ```csharp
 builder.Services.AddProblemDetails();
 
-app.MapGet("/api/orders/{id:guid}", async (Guid id, IOrderReader reader, CancellationToken ct) =>
+app.MapGet("/api/orders/{id:guid}", async (
+    Guid id,
+    ClaimsPrincipal user,
+    IAuthorizationService authorization,
+    IOrderReader reader,
+    CancellationToken ct) =>
 {
-    OrderDto? order = await reader.GetAsync(id, ct);
-    return order is null
-        ? Results.Problem(statusCode: 404, title: "Order not found")
-        : Results.Ok(order);
-});
+    Order? order = await reader.GetAsync(id, ct);
+    if (order is null)
+        return Results.Problem(statusCode: 404, title: "Order not found");
+
+    AuthorizationResult result = await authorization.AuthorizeAsync(user, order, "Orders.ResourceRead");
+    return result.Succeeded ? Results.Ok(OrderDto.From(order)) : Results.Forbid();
+})
+.RequireAuthorization();
 ```
 
 In production, error responses MUST avoid stack traces, raw exception messages, secrets, SQL details, file paths, and internal service names. Log details server-side with correlation identifiers.

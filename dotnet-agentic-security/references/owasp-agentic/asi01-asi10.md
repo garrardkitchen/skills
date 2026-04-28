@@ -87,11 +87,15 @@ public sealed class ToolGate
         if (!_tools.TryGetValue(toolName, out var tool))
             throw new InvalidOperationException("Tool not allowlisted.");
 
-        if (tool.IsDestructive && !user.IsInRole("Approver"))
+        if (tool.IsDestructive && !HasAppRole(user, "AgentTool.Approver"))
             throw new UnauthorizedAccessException("Destructive tool requires approver role.");
 
         return await tool.ExecuteAsync(request, cancellationToken);
     }
+
+    private static bool HasAppRole(ClaimsPrincipal user, string role) =>
+        // Requires JWT bearer configuration with MapInboundClaims = false or RoleClaimType = "roles".
+        user.FindAll("roles").Any(claim => claim.Value == role);
 }
 ```
 
@@ -114,7 +118,7 @@ public static class CredentialFactory
             return new ChainedTokenCredential(
                 new AzureCliCredential(),
                 new VisualStudioCredential(),
-                new VisualStudioCodeCredential());
+                new EnvironmentCredential());
         }
 
         string? managedIdentityClientId = configuration["Azure:ManagedIdentityClientId"];
@@ -126,8 +130,14 @@ public static class CredentialFactory
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Devices.Read", policy => policy.RequireClaim("scp", "devices.read"));
+    options.AddPolicy("Devices.Read", policy =>
+        policy.RequireAssertion(context => HasScope(context.User, "devices.read")));
 });
+
+static bool HasScope(ClaimsPrincipal user, string scope) =>
+    user.FindFirst("scp")?.Value
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Contains(scope, StringComparer.Ordinal) == true;
 ```
 
 ### `ASI04` — supply chain integrity

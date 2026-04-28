@@ -59,10 +59,14 @@ app.MapGet("/api/orders/{id:guid}", async (
         x => x.Id == id && x.TenantId == tenantContext.TenantId,
         ct);
     if (order is null) return Results.NotFound();
-    if (order.OwnerObjectId != objectId && !user.IsInRole("TenantAdmin")) return Results.Forbid();
+    if (order.OwnerObjectId != objectId && !HasAppRole(user, "Tenant.Admin")) return Results.Forbid();
 
-    return Results.Ok(order);
+    return Results.Ok(OrderDto.From(order));
 });
+
+static bool HasAppRole(ClaimsPrincipal user, string role) =>
+    // Requires JWT bearer configuration with MapInboundClaims = false or RoleClaimType = "roles".
+    user.FindAll("roles").Any(claim => claim.Value == role);
 ```
 
 ## Non-HTTP tenant propagation

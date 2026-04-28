@@ -22,10 +22,18 @@ Prefer URL or header versioning, but be consistent.
 ```csharp
 app.MapGroup("/api/v1/orders")
    .RequireAuthorization()
-   .MapGet("/{id:guid}", async (Guid id, IOrderReader reader, CancellationToken ct) =>
+   .MapGet("/{id:guid}", async (
+       Guid id,
+       ClaimsPrincipal user,
+       IAuthorizationService authorization,
+       IOrderReader reader,
+       CancellationToken ct) =>
    {
-       OrderDto? order = await reader.GetAsync(id, ct);
-       return order is null ? Results.NotFound() : Results.Ok(order);
+       Order? order = await reader.GetAsync(id, ct);
+       if (order is null) return Results.NotFound();
+
+       AuthorizationResult result = await authorization.AuthorizeAsync(user, order, "Orders.ResourceRead");
+       return result.Succeeded ? Results.Ok(OrderDto.From(order)) : Results.Forbid();
    });
 ```
 
@@ -104,12 +112,12 @@ app.MapGet("/api/v1/orders/{id:guid}", async (
     IOrderReader reader,
     CancellationToken ct) =>
 {
-    OrderDto? order = await reader.GetAsync(id, ct);
+    Order? order = await reader.GetAsync(id, ct);
     if (order is null)
         return Results.NotFound();
 
-    AuthorizationResult allowed = await authorization.AuthorizeAsync(user, order, "CanReadOrder");
-    return allowed.Succeeded ? Results.Ok(order) : Results.Forbid();
+    AuthorizationResult allowed = await authorization.AuthorizeAsync(user, order, "Orders.ResourceRead");
+    return allowed.Succeeded ? Results.Ok(OrderDto.From(order)) : Results.Forbid();
 })
 .RequireAuthorization();
 ```

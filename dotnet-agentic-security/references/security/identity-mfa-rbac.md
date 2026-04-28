@@ -27,10 +27,15 @@ builder.Services
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Devices.Read", policy =>
-        policy.RequireClaim("scp", "devices.read"));
+        policy.RequireAssertion(context => HasScope(context.User, "devices.read")));
     options.AddPolicy("Devices.AppRead", policy =>
         policy.RequireClaim("roles", "Devices.Read.All"));
 });
+
+static bool HasScope(ClaimsPrincipal user, string scope) =>
+    user.FindFirst("scp")?.Value
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Contains(scope, StringComparer.Ordinal) == true;
 ```
 
 ## Policy-based authorization

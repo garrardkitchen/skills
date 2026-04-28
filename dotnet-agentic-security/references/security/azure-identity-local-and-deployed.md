@@ -23,7 +23,7 @@ TokenCredential CreateCredential(IHostEnvironment environment, IConfiguration co
         return new ChainedTokenCredential(
             new AzureCliCredential(),
             new VisualStudioCredential(),
-            new VisualStudioCodeCredential());
+            new EnvironmentCredential());
     }
 
     string? managedIdentityClientId = configuration["Azure:ManagedIdentityClientId"];
@@ -59,7 +59,7 @@ Deployed Azure workloads SHOULD use managed identity or workload identity rather
 - document which local credential paths are allowed:
   - Azure CLI
   - Visual Studio
-  - Visual Studio Code
+  - environment variables for controlled automation
 - do not depend on interactive browser auth in unattended production paths
 - assign least-privilege Azure RBAC roles to the workload identity and test those assignments in integration environments
 - do not let local credential success hide missing production RBAC assignments

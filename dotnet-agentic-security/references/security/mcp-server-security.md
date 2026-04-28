@@ -33,11 +33,15 @@ public sealed class ToolAuthorizationService : IToolAuthorizationService
 {
     public Task EnsureAllowedAsync(ToolInvocationContext context, CancellationToken cancellationToken)
     {
-        if (context.ToolName == "delete-device" && !context.Principal.IsInRole("DeviceAdmin"))
+        if (context.ToolName == "delete-device" && !HasAppRole(context.Principal, "Device.Admin"))
             throw new UnauthorizedAccessException("Caller is not allowed to invoke delete-device.");
 
         return Task.CompletedTask;
     }
+
+    private static bool HasAppRole(ClaimsPrincipal user, string role) =>
+        // Requires JWT bearer configuration with MapInboundClaims = false or RoleClaimType = "roles".
+        user.FindAll("roles").Any(claim => claim.Value == role);
 }
 ```
 
