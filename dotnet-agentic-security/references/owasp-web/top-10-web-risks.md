@@ -2,41 +2,41 @@
 
 Use this file when the user asks for web application security guidance, API security, or classic OWASP mitigations.
 
-This file maps OWASP Top Ten Web Application Security Risks 2025 and OWASP API Security Top 10 2023 risk families to practical ASP.NET Core mitigations. Treat access control, API object authorization, and tenant isolation as first-priority implementation concerns.
+This file maps OWASP Top Ten Web Application Security Risks 2025 (`A01:2025` through `A10:2025`) and OWASP API Security Top 10 2023 risk families to practical ASP.NET Core mitigations. Treat access control, API object authorization, and tenant isolation as first-priority implementation concerns. Include the OWASP code beside example code when a snippet addresses a specific risk.
 
 ## Web risk-to-mitigation map
 
-| Risk family | ASP.NET Core mitigation focus |
-|---|---|
-| Broken access control | Policy-based authorization, ownership checks, route-level and resource-level enforcement |
-| Security misconfiguration | Environment separation, secure headers, production-safe middleware, locked-down diagnostics |
-| Software supply chain failures | Package hygiene, pinned versions, source mapping, SBOM/dependency review |
-| Cryptographic failures | HTTPS everywhere, Data Protection, Key Vault, modern algorithms, no plaintext secrets |
-| Injection | Parameterized queries, safe LINQ, validated input, output encoding, no dynamic SQL from raw input |
-| Insecure design | Threat modeling, trust boundaries, secure-by-default endpoints, least privilege |
-| Authentication failures | OIDC/JWT, MFA, session/token hygiene, no custom auth protocols |
-| Software/data integrity failures | Trusted package sources, signed artifacts, protected CI/CD, config integrity |
-| Security logging and alerting failures | Structured logs, audit trails, correlation IDs, alert-worthy failures |
-| Mishandling exceptional conditions | Problem Details, production exception handling, no stack traces to callers |
+| Code | Risk family | ASP.NET Core mitigation focus |
+|---|---|---|
+| `A01:2025` | Broken Access Control | Policy-based authorization, ownership checks, route-level and resource-level enforcement |
+| `A02:2025` | Security Misconfiguration | Environment separation, secure headers, production-safe middleware, locked-down diagnostics |
+| `A03:2025` | Software Supply Chain Failures | Package hygiene, pinned versions, source mapping, SBOM/dependency review |
+| `A04:2025` | Cryptographic Failures | HTTPS everywhere, Data Protection, Key Vault, modern algorithms, no plaintext secrets |
+| `A05:2025` | Injection | Parameterized queries, safe LINQ, validated input, output encoding, no dynamic SQL from raw input |
+| `A06:2025` | Insecure Design | Threat modeling, trust boundaries, secure-by-default endpoints, least privilege |
+| `A07:2025` | Authentication Failures | OIDC/JWT, MFA, session/token hygiene, no custom auth protocols |
+| `A08:2025` | Software or Data Integrity Failures | Trusted package sources, signed artifacts, protected CI/CD, config integrity |
+| `A09:2025` | Security Logging and Alerting Failures | Structured logs, audit trails, correlation IDs, alert-worthy failures |
+| `A10:2025` | Mishandling of Exceptional Conditions | Problem Details, production exception handling, no stack traces to callers |
 
 ## API Security Top 10 2023 map
 
 | API risk | ASP.NET Core implementation priority |
 |---|---|
-| API1 Broken Object Level Authorization | Check resource ownership or tenant membership in every handler using caller-provided IDs |
-| API2 Broken Authentication | Validate issuer, audience, lifetime, signing keys, token type, and expected flow |
-| API3 Broken Object Property Level Authorization | Use narrow DTOs; ignore or reject over-posted properties; enforce field-level authorization where needed |
-| API4 Unrestricted Resource Consumption | Add request limits, pagination, rate limits, quotas, cancellation, and bounded downstream calls |
-| API5 Broken Function Level Authorization | Require policies for privileged endpoints and administrative flows |
-| API6 Unrestricted Access to Sensitive Business Flows | Add abuse controls, bot/rate protections, workflow quotas, and business-level monitoring |
-| API7 SSRF | Use outbound allowlists, block internal metadata/private ranges, and avoid arbitrary user-controlled fetches |
-| API8 Security Misconfiguration | Lock down Swagger, diagnostics, CORS, headers, environment settings, and management endpoints |
-| API9 Improper Inventory Management | Maintain endpoint/version inventory and retire deprecated APIs deliberately |
-| API10 Unsafe Consumption of APIs | Validate third-party API responses and authenticate/authorize callbacks/webhooks |
+| `API1:2023` Broken Object Level Authorization | Check resource ownership or tenant membership in every handler using caller-provided IDs |
+| `API2:2023` Broken Authentication | Validate issuer, audience, lifetime, signing keys, token type, and expected flow |
+| `API3:2023` Broken Object Property Level Authorization | Use narrow DTOs; ignore or reject over-posted properties; enforce field-level authorization where needed |
+| `API4:2023` Unrestricted Resource Consumption | Add request limits, pagination, rate limits, quotas, cancellation, and bounded downstream calls |
+| `API5:2023` Broken Function Level Authorization | Require policies for privileged endpoints and administrative flows |
+| `API6:2023` Unrestricted Access to Sensitive Business Flows | Add abuse controls, bot/rate protections, workflow quotas, and business-level monitoring |
+| `API7:2023` SSRF | Use outbound allowlists, block internal metadata/private ranges, and avoid arbitrary user-controlled fetches |
+| `API8:2023` Security Misconfiguration | Lock down Swagger, diagnostics, CORS, headers, environment settings, and management endpoints |
+| `API9:2023` Improper Inventory Management | Maintain endpoint/version inventory and retire deprecated APIs deliberately |
+| `API10:2023` Unsafe Consumption of APIs | Validate third-party API responses and authenticate/authorize callbacks/webhooks |
 
 ## Practical mitigation snippets
 
-### Broken access control
+### `A01:2025` Broken Access Control
 
 ```csharp
 // Delegated user-token example. App-only callers should use a separate `roles` policy.
@@ -68,7 +68,7 @@ When using Microsoft Entra ID access tokens with `MapInboundClaims = false`, pre
 
 For app-only tokens, validate `roles` or app permissions with a separate policy instead of `scp`. For every endpoint that accepts an object ID, enforce resource ownership or tenant membership in application code; endpoint-level authentication is not enough.
 
-### Cryptographic failures
+### `A04:2025` Cryptographic Failures
 
 ```csharp
 using Azure.Core;
@@ -86,7 +86,7 @@ builder.Services.AddDataProtection()
         credential);
 ```
 
-### Injection
+### `A05:2025` Injection
 
 ```csharp
 // Good: parameterized by EF Core
@@ -97,7 +97,7 @@ IReadOnlyList<Customer> customers = await db.Customers
 // Avoid building SQL from untrusted strings.
 ```
 
-### Insecure design
+### `A06:2025` Insecure Design
 
 ```csharp
 public sealed record TransferFundsRequest(Guid FromAccountId, Guid ToAccountId, decimal Amount);
@@ -128,7 +128,7 @@ app.MapPost("/transfers", async (
 .RequireAuthorization();
 ```
 
-### Security misconfiguration
+### `A02:2025` Security Misconfiguration
 
 ```csharp
 if (!app.Environment.IsDevelopment())
@@ -148,7 +148,7 @@ app.Use(async (context, next) =>
 
 Never expose Swagger/OpenAPI, health details, developer exception pages, debug endpoints, or management endpoints publicly in production unless explicitly protected and approved.
 
-### Software supply chain failures
+### `A03:2025` Software Supply Chain Failures
 
 ```xml
 <!-- Directory.Packages.props -->
@@ -167,7 +167,7 @@ dotnet list package --vulnerable --include-transitive
 
 For production systems, also use central package management, trusted package sources, dependency scanning, and SBOM generation where the delivery pipeline supports it.
 
-### Authentication failures
+### `A07:2025` Authentication Failures
 
 ```csharp
 builder.Services
@@ -180,7 +180,7 @@ builder.Services
     });
 ```
 
-### Software and data integrity failures
+### `A08:2025` Software or Data Integrity Failures
 
 ```csharp
 public sealed class WebhookSignatureValidator
@@ -226,7 +226,7 @@ app.MapPost("/webhooks/provider", async (HttpRequest request, IConfiguration con
 
 Production webhook handlers SHOULD also verify provider-specific canonicalization, timestamp tolerance, replay protection, request body limits, and idempotency before acknowledging the event.
 
-### Logging and monitoring failures
+### `A09:2025` Security Logging and Alerting Failures
 
 ```csharp
 app.Use(async (context, next) =>
@@ -241,7 +241,7 @@ app.Use(async (context, next) =>
 });
 ```
 
-### SSRF
+### `API7:2023` SSRF
 
 ```csharp
 // Validation gate only. Pair with egress firewall/proxy controls or a
@@ -314,16 +314,16 @@ An outbound allowlist MUST include scheme, host, port, and destination class che
 
 This file includes practical mitigation guidance for OWASP Top Ten Web Application Security Risks 2025 and OWASP API Security Top 10 2023 risk families:
 
-1. Broken access control
-2. Security misconfiguration
-3. Software supply chain failures
-4. Cryptographic failures
-5. Injection
-6. Insecure design
-7. Authentication failures
-8. Software and data integrity failures
-9. Security logging and alerting failures
-10. Mishandling exceptional conditions
+1. `A01:2025` Broken Access Control
+2. `A02:2025` Security Misconfiguration
+3. `A03:2025` Software Supply Chain Failures
+4. `A04:2025` Cryptographic Failures
+5. `A05:2025` Injection
+6. `A06:2025` Insecure Design
+7. `A07:2025` Authentication Failures
+8. `A08:2025` Software or Data Integrity Failures
+9. `A09:2025` Security Logging and Alerting Failures
+10. `A10:2025` Mishandling of Exceptional Conditions
 11. API object/function/property authorization failures
 12. API resource consumption, inventory, SSRF, and unsafe API consumption
 
@@ -338,7 +338,7 @@ This file includes practical mitigation guidance for OWASP Top Ten Web Applicati
 
 ## Sources
 
-- OWASP Top Ten Web Application Security Risks 2025
+- OWASP Top Ten Web Application Security Risks 2025 (`A01:2025` through `A10:2025`)
 - OWASP API Security Top 10 2023
 - OWASP ASVS v5.0.0
 - OWASP Authorization, Authentication, REST, and .NET Security Cheat Sheets

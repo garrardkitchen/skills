@@ -1,6 +1,6 @@
 ---
 name: agentic-security-assessment
-description: Assess Azure-hosted or Azure-integrated agentic AI repositories against the Azure Agentic AI Security Baseline and OWASP ASI01-ASI10, using OWASP Top Ten Web Application Security Risks 2025, OWASP API Security Top 10 2023, and ASVS v5.0.0 as cross-cutting lenses where web/API evidence affects agent risk. Use this skill whenever the user asks for agentic AI security assessment, OWASP agentic ASI01-ASI10 mapping, Azure agent security review, Terraform and code evidence review, agentic compliance gaps, or a security report with Mermaid architecture diagrams and implementation recommendations.
+description: Assess Azure-hosted or Azure-integrated agentic AI repositories against the Azure Agentic AI Security Baseline and OWASP ASI01-ASI10, using OWASP Top Ten Web Application Security Risks 2025 codes A01:2025-A10:2025, OWASP API Security Top 10 2023, and ASVS v5.0.0 as cross-cutting lenses where web/API evidence affects agent risk. Use this skill whenever the user asks for agentic AI security assessment, OWASP agentic ASI01-ASI10 mapping, Azure agent security review, Terraform and code evidence review, agentic compliance gaps, or a security report with Mermaid architecture diagrams and implementation recommendations.
 ---
 
 # Agentic Security Assessment Skill
@@ -197,18 +197,34 @@ Do not use "internal-only", "different repository", or "not yet implemented here
 
 ## Cross-Cutting OWASP Web/API Lens
 
-Use OWASP Top Ten Web Application Security Risks 2025 and OWASP API Security Top 10 2023 to enrich ASI findings where web/API vulnerabilities change the agentic risk. Do not create a second full OWASP matrix by default; that overwhelms the report and distracts from the ASI control source.
+Use OWASP Top Ten Web Application Security Risks 2025 and OWASP API Security Top 10 2023 to enrich ASI findings where web/API vulnerabilities change the agentic risk. Use the official Web Top Ten identifiers (`A01:2025` through `A10:2025`) whenever naming a web risk, especially beside remediation code. Do not create a second full OWASP matrix by default; that overwhelms the report and distracts from the ASI control source.
+
+OWASP Web Top Ten 2025 identifiers:
+
+| Code | Risk |
+|------|------|
+| `A01:2025` | Broken Access Control |
+| `A02:2025` | Security Misconfiguration |
+| `A03:2025` | Software Supply Chain Failures |
+| `A04:2025` | Cryptographic Failures |
+| `A05:2025` | Injection |
+| `A06:2025` | Insecure Design |
+| `A07:2025` | Authentication Failures |
+| `A08:2025` | Software or Data Integrity Failures |
+| `A09:2025` | Security Logging and Alerting Failures |
+| `A10:2025` | Mishandling of Exceptional Conditions |
 
 Instead, add a compact cross-cutting section only when evidence shows a material web/API concern, such as:
 
 | Web/API concern | Typical ASI relationship | Evidence to look for |
 |-----------------|--------------------------|----------------------|
-| Broken access control / BOLA / BFLA | `ASI02`, `ASI03`, `ASI10` | Missing resource checks, broad tool permissions, admin endpoints without policies |
-| Cryptographic failures and secret exposure | `ASI03`, `ASI08` | Plaintext secrets, unmanaged keys, missing Key Vault references, weak token handling |
-| Injection, SSRF, and unsafe outbound calls | `ASI01`, `ASI02`, `ASI05` | User-controlled URLs, prompt-to-tool parameter flow, dynamic SQL, command execution |
-| Security misconfiguration | `ASI03`, `ASI07`, `ASI09` | Public diagnostics, permissive CORS, unprotected Swagger, missing private endpoints |
-| Vulnerable or untrusted components | `ASI04` | Unpinned dependencies, unreviewed MCP servers/plugins, missing lockfiles or SBOMs |
-| Logging and monitoring failures | `ASI09`, `ASI10` | Missing audit logs for tool calls, approvals, rejected actions, model/tool anomalies |
+| `A01:2025` Broken Access Control / API1:2023 BOLA / API5:2023 BFLA | `ASI02`, `ASI03`, `ASI10` | Missing resource checks, broad tool permissions, admin endpoints without policies |
+| `A04:2025` Cryptographic Failures and secret exposure | `ASI03`, `ASI08` | Plaintext secrets, unmanaged keys, missing Key Vault references, weak token handling |
+| `A05:2025` Injection | `ASI01`, `ASI02`, `ASI05` | Prompt-to-tool parameter flow, dynamic SQL, command execution, untrusted input reaching interpreters |
+| `API7:2023` SSRF / unsafe outbound calls | `ASI01`, `ASI02`, `ASI05` | User-controlled URLs, arbitrary fetch tools, callback URLs, outbound redirects, private-network destinations |
+| `A02:2025` Security Misconfiguration | `ASI03`, `ASI07`, `ASI09` | Public diagnostics, permissive CORS, unprotected Swagger, missing private endpoints |
+| `A03:2025` Software Supply Chain Failures | `ASI04` | Unpinned dependencies, unreviewed MCP servers/plugins, missing lockfiles or SBOMs |
+| `A09:2025` Security Logging and Alerting Failures | `ASI09`, `ASI10` | Missing audit logs for tool calls, approvals, rejected actions, model/tool anomalies |
 
 When the assessed application uses `.NET` or `ASP.NET Core`, include short C# remediation snippets for the highest-value fixes. Keep snippets focused on one control each; do not turn the assessment into a tutorial.
 
@@ -217,7 +233,8 @@ When the assessed application uses `.NET` or `ASP.NET Core`, include short C# re
 Use illustrative examples like these when they match the detected vulnerability and stack:
 
 ```csharp
-// Illustrative broken access control / BOLA fix: authorize the caller against the specific resource.
+// A01:2025 Broken Access Control / API1:2023 BOLA:
+// authorize the caller against the specific resource.
 app.MapGet("/api/orders/{id:guid}", async (
     Guid id,
     ClaimsPrincipal user,
@@ -235,7 +252,8 @@ app.MapGet("/api/orders/{id:guid}", async (
 ```
 
 ```csharp
-// Illustrative SSRF validation gate. Pair this with egress firewall/proxy controls
+// API7:2023 SSRF:
+// illustrative validation gate. Pair this with egress firewall/proxy controls
 // or a rebinding-resistant HTTP handler before sending the outbound request.
 using System.Net;
 using System.Net.Sockets;
@@ -298,7 +316,8 @@ builder.Services.AddHttpClient("approved-outbound")
 DNS validation alone is not a complete SSRF defense because the connection can resolve the hostname again. Treat the code above as an application-layer gate and pair it with rebinding-resistant egress controls, such as an approved outbound proxy, firewall rules, or a handler that pins the validated destination.
 
 ```csharp
-// Security logging: audit rejected or high-risk tool calls without logging secrets or prompts verbatim.
+// A09:2025 Security Logging and Alerting Failures:
+// audit rejected or high-risk tool calls without logging secrets or prompts verbatim.
 logger.LogWarning(
     "Agent tool call rejected. TraceId={TraceId} Tool={ToolName} User={UserObjectId} Reason={Reason}",
     traceId,
@@ -528,7 +547,7 @@ Use a compact table with no more than 5 rows:
 
 | Concern | OWASP lens | Related ASI | Evidence | Recommended fix |
 |---------|------------|-------------|----------|-----------------|
-| Missing resource authorization on tool-backed order endpoint | OWASP Top Ten Web Application Security Risks 2025 Broken Access Control / OWASP API Security Top 10 2023 API1 BOLA | ASI02, ASI03 | `src/Api/OrdersController.cs` | Add resource-based authorization before invoking the agent tool |
+| Missing resource authorization on tool-backed order endpoint | `A01:2025` Broken Access Control / `API1:2023` BOLA | ASI02, ASI03 | `src/Api/OrdersController.cs` | Add resource-based authorization before invoking the agent tool |
 
 Do not duplicate every ASI finding here. Use this section to highlight web/API vulnerabilities that amplify agentic risk.
 
@@ -616,7 +635,7 @@ Also include a short grouped link section by technology, such as:
 - Terraform modules / policy
 - application framework security
 - OWASP agentic guidance
-- OWASP Top Ten Web Application Security Risks 2025
+- OWASP Top Ten Web Application Security Risks 2025 (`A01:2025` through `A10:2025`)
 - OWASP API Security Top 10 2023
 - OWASP ASVS v5.0.0
 
@@ -628,7 +647,7 @@ Include references when relevant to the findings:
 
 - Azure Agentic AI Security Baseline from the assessed repository or skill repository
 - OWASP Top 10 for Agentic Applications
-- OWASP Top Ten Web Application Security Risks 2025
+- OWASP Top Ten Web Application Security Risks 2025 (`A01:2025` through `A10:2025`)
 - OWASP API Security Top 10 2023
 - OWASP ASVS v5.0.0
 - OWASP GenAI Security Project guidance

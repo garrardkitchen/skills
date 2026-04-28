@@ -1,6 +1,6 @@
 ---
 name: dotnet-agentic-security
-description: Provide modular, security-prioritized guidance for building and reviewing secure .NET, ASP.NET Core, Azure-hosted, MCP, and agentic applications. Use for OWASP Agentic ASI01-ASI10, OWASP Top Ten Web Application Security Risks 2025, OWASP API Security Top 10 2023, ASVS v5.0.0-aligned implementation guidance, identity, authorization, tenant isolation, secure APIs, EF Core, Azure.Identity, secrets, testing, observability, resilience, and production-ready C# examples.
+description: Provide modular, security-prioritized guidance for building and reviewing secure .NET, ASP.NET Core, Azure-hosted, MCP, and agentic applications. Use for OWASP Agentic ASI01-ASI10, OWASP Top Ten Web Application Security Risks 2025 codes A01:2025-A10:2025, OWASP API Security Top 10 2023, ASVS v5.0.0-aligned implementation guidance, identity, authorization, tenant isolation, secure APIs, EF Core, Azure.Identity, secrets, testing, observability, resilience, and production-ready C# examples.
 ---
 
 # .NET Agentic Security Skill
@@ -104,7 +104,7 @@ For agentic security guidance, use:
 
 For web and API security guidance, use these authoritative sources conceptually and map them to practical `ASP.NET Core` mitigations:
 
-- OWASP Top Ten Web Application Security Risks 2025
+- OWASP Top Ten Web Application Security Risks 2025, using official identifiers `A01:2025` through `A10:2025`
 - OWASP API Security Top 10 2023
 - OWASP Application Security Verification Standard (ASVS) v5.0.0
 - OWASP Cheat Sheet Series, especially authorization, authentication, REST, .NET, secrets, and input validation
@@ -139,7 +139,7 @@ Load only the files needed for the user’s request:
 - always start with `references/overview.md`
 - load `references/overview/topic-relationship-map.md` when the user asks how topics relate or needs a visual/conceptual map
 - load `references/owasp-agentic/asi01-asi10.md` when the user asks about agentic risks, agent workflows, MCP servers, or agent orchestration
-- load `references/owasp-web/top-10-web-risks.md` when the user asks about OWASP Top Ten Web Application Security Risks 2025, web app security, API security, validation, headers, authn/authz, SSRF, or logging
+- load `references/owasp-web/top-10-web-risks.md` when the user asks about OWASP Top Ten Web Application Security Risks 2025, `A01:2025` through `A10:2025`, web app security, API security, validation, headers, authn/authz, SSRF, or logging
 - load `references/api/http-api-best-practices.md` for HTTP API design, OpenAPI, versioning, validation, pagination, Problem Details, idempotency, or secure endpoint design
 - load `references/api/http-hardening-and-errors.md` for middleware ordering, CORS, headers, CSRF/antiforgery, request limits, safe uploads, forwarded headers, and error handling
 - load `references/agentic/microsoft-agent-framework-workflows.md` for handoff, fan-out/fan-in, evaluator patterns, workflow orchestration, or session persistence

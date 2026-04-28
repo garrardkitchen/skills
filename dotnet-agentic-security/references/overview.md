@@ -14,7 +14,7 @@ It is opinionated in favor of:
 ## Core themes
 
 - OWASP Agentic Top 10 (`ASI01`-`ASI10`)
-- OWASP Top Ten Web Application Security Risks 2025 mitigation guidance
+- OWASP Top Ten Web Application Security Risks 2025 mitigation guidance, using identifiers `A01:2025` through `A10:2025`
 - OWASP API Security Top 10 2023 mitigation guidance
 - OWASP ASVS v5.0.0-aligned verification thinking for implementation completeness
 - ASP.NET Core API best practices
