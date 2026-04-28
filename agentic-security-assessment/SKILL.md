@@ -1,13 +1,13 @@
 ---
 name: agentic-security-assessment
-description: Assess a repository against the Azure Agentic AI Security Baseline and OWASP ASI01-ASI10 using Terraform and application code evidence, then produce a markdown report, colored Mermaid diagram, and implementation gap table.
+description: Assess Azure-hosted or Azure-integrated agentic AI repositories against the Azure Agentic AI Security Baseline and OWASP ASI01-ASI10 using Terraform, IaC, application code, and enforceable configuration evidence. Use this skill whenever the user asks for agentic AI security assessment, OWASP agentic ASI01-ASI10 mapping, Azure agent security review, Terraform and code evidence review, agentic compliance gaps, or a security report with Mermaid architecture diagrams and implementation recommendations.
 ---
 
 # Agentic Security Assessment Skill
 
 ## Overview
 
-Use this skill to assess a repository against `/Users/kitcheng/.claude/skills/docs/compliance/azure-agentic-ai-security-baseline.md/docs/compliance/azure-agentic-ai-security-baseline.md`, specifically `ASI01` through `ASI10`.
+Use this skill to assess a repository against `docs/compliance/azure-agentic-ai-security-baseline.md`, specifically `ASI01` through `ASI10`.
 
 This skill is designed for Azure-hosted or Azure-integrated agentic AI systems and MUST:
 
@@ -19,12 +19,41 @@ This skill is designed for Azure-hosted or Azure-integrated agentic AI systems a
 - create a markdown assessment report
 - generate a styled, colorized Mermaid diagram of the current implementation
 - produce a gaps table with implementation guidance links relevant to the detected technology stack
+- keep the report decision-ready for humans by leading with a compact executive snapshot, top concerns, and only then detailed evidence
 
 For this skill, treat a system as agentic when it plans or reasons across multiple steps, invokes tools or external actions, persists memory or context, coordinates with other services or agents, or operates with partial autonomy before a human review point.
 
 The default report location is:
 
 `docs/compliance/assessments/`
+
+---
+
+## GPT-5.5 Output Principles
+
+When generating the assessment, optimize for a human reader who needs to understand risk quickly:
+
+- lead with the outcome and the top 3 concerns
+- keep tables concise; move long evidence into detailed findings
+- group repeated gaps instead of repeating the same recommendation under every ASI
+- separate missing controls from missing evidence
+- avoid speculative findings; every concern must cite code, Terraform, enforceable configuration, or a clearly stated absence of evidence
+- use direct, balanced language suitable for security, engineering, and governance stakeholders
+
+Use these concern markers consistently:
+
+| Marker | Meaning | Use when |
+|--------|---------|----------|
+| 🔴 Critical concern | Immediate high-impact security gap | A production-impacting agentic risk is exploitable or a required control is plainly absent |
+| 🟠 Material gap | Important implementation gap | A control is partial, weak, or missing for a significant workflow |
+| 🟡 Evidence gap | Not proven from assessed scope | The control may exist elsewhere, but code/config evidence is missing |
+| 🟢 Strength | Strong implementation evidence | The control is clearly implemented with enforceable evidence |
+
+Also assign an evidence strength of `High`, `Medium`, or `Low`:
+
+- `High`: direct Terraform, application code, or enforceable configuration proves the conclusion
+- `Medium`: direct evidence exists but is incomplete, split across layers, or has unresolved scope limits
+- `Low`: only secondary evidence exists, or the conclusion is mainly based on absence of evidence
 
 ---
 
@@ -38,8 +67,11 @@ Before running the assessment, ask the user:
 4. **Output file name**: Use the default date-based report name, or a custom report name?
 5. **Technology emphasis**: Are there known stacks to prioritize (for example `.NET`, `Python`, `Node.js`, `AKS`, `Terraform`, `Container Apps`, `Functions`, `Azure OpenAI`)?
 6. **Evidence strictness**: Should the report only count code/config evidence, or also include supporting evidence from docs and CI/CD configuration?
+7. **Report tone**: Use the default balanced tone, or prefer executive, engineering, or formal assurance wording?
 
 If the user already provided enough detail, do not re-ask answered questions.
+
+If the user does not express a report tone preference, use a balanced tone.
 
 ---
 
@@ -152,6 +184,7 @@ For each `ASI01` through `ASI10`:
    - exact file paths
    - key functions, resources, classes, modules, or configuration blocks
    - a short explanation of why the evidence maps to the ASI control
+   - concern marker and evidence strength
 5. If there is no evidence, say so explicitly
 
 Do not over-credit intent. A TODO comment, design aspiration, or vague README note is not enough to mark a control as addressed.
@@ -288,11 +321,13 @@ The report MUST include the following sections:
 ```markdown
 # Agentic Security Assessment: [Repository or Service Name]
 
-## Summary
+## Executive Snapshot
 
 ## Scope
 
 ## Assessed Architecture Overview
+
+## Top Concerns
 
 ## ASI01–ASI10 Assessment Matrix
 
@@ -308,17 +343,19 @@ The report MUST include the following sections:
 
 ## Implementation Links
 
-## References
+## Standards and References
 ```
 
-### 1. Summary
+### 1. Executive Snapshot
 
 Include:
 
 - overall assessment posture
 - number of ASI controls addressed / partial / not addressed
-- most critical risks
+- the single most important concern
+- up to 3 highest-priority concerns
 - whether the current implementation appears internet-facing, internal-only, or mixed
+- a short reading guide that explains the concern markers
 
 ### 2. Scope
 
@@ -330,26 +367,42 @@ Include:
 - application scope
 - any excluded areas
 
-### 3. ASI01–ASI10 Assessment Matrix
+### 3. Top Concerns
+
+Before the full matrix, include a compact top-concerns table. Limit it to the top 3 unless there is a clear reason to show up to 5.
+
+| Priority | ASI | Area | Why it matters | Evidence |
+|----------|-----|------|----------------|----------|
+| 🔴 Critical concern | ASI02 | Tool Misuse | Write-capable tools lack parameter policy and destructive-action approval | `src/agent/tools.py`, `infra/functions.tf` |
+
+### 4. ASI01–ASI10 Assessment Matrix
 
 Use a table like:
 
-| ASI | Risk | Status | Terraform / Config Evidence | Application Evidence | Notes |
-|-----|------|--------|-----------------------------|----------------------|-------|
-| ASI01 | Agent Behavior Hijacking | Partially Addressed | `infra/apim.tf` | `src/agent/orchestrator.py` | Trusted instructions separated, but no plan-drift approval gate |
+| ASI | Risk | Status | Concern | Evidence Strength | Terraform / Config Evidence | Application Evidence | Notes |
+|-----|------|--------|---------|-------------------|-----------------------------|----------------------|-------|
+| ASI01 | Agent Behavior Hijacking | Partially Addressed | 🟠 Material gap | Medium | `infra/apim.tf` | `src/agent/orchestrator.py` | Trusted instructions separated, but no plan-drift approval gate |
 
-### 4. Detailed Findings
+### 5. Detailed Findings
 
 For each ASI section include:
 
 - risk name
 - status
+- concern marker
+- evidence strength
 - where addressed
 - exact evidence with file paths
 - why the evidence counts
 - what is missing
 
-### 5. Current-State Mermaid Diagram
+Keep each detailed finding skimmable:
+
+- start with one sentence naming the concern or strength
+- use no more than 3-5 evidence bullets unless the user asks for exhaustive evidence
+- put detailed implementation links in the recommendations and references sections, not inside every finding
+
+### 6. Current-State Mermaid Diagram
 
 Create a Mermaid diagram that captures the current implementation.
 
@@ -396,13 +449,13 @@ When writing Mermaid labels:
   - use `Approval workflow` instead of `Approval(flow)`
 - keep labels short; move detailed evidence into surrounding prose instead of the diagram
 
-### 6. Gaps and Recommendations
+### 7. Gaps and Recommendations
 
 This section MUST include a table for missing or partial controls:
 
-| ASI | Gap | Impact | Evidence Layer | Relevant Technology | Recommended Implementation | Best-Practice Links |
-|-----|-----|--------|----------------|---------------------|----------------------------|---------------------|
-| ASI02 | No tool parameter validation | High | Application | Azure Functions + Python | Add JSON-schema validation and destructive-action approval gate | [Azure API Management policy docs](...), [OWASP guidance](...) |
+| Priority | ASI | Gap | Impact | Evidence Layer | Relevant Technology | Recommended Implementation | Best-Practice Links |
+|----------|-----|-----|--------|----------------|---------------------|----------------------------|---------------------|
+| 🔴 Critical concern | ASI02 | No tool parameter validation | High | Application | Azure Functions + Python | Add JSON-schema validation and destructive-action approval gate | [Azure API Management policy docs](...), [OWASP guidance](...) |
 
 Rules:
 
@@ -410,8 +463,9 @@ Rules:
 - choose implementation links appropriate to the detected stack
 - prefer official documentation for Azure, Terraform, and the app framework
 - where useful, include OWASP, Microsoft, HashiCorp, language/framework docs, or vendor guidance
+- show the recommended next change first; avoid long remediation essays in the table
 
-### 7. Implementation Links
+### 8. Implementation Links
 
 Also include a short grouped link section by technology, such as:
 
@@ -420,6 +474,27 @@ Also include a short grouped link section by technology, such as:
 - Terraform modules / policy
 - application framework security
 - OWASP agentic guidance
+
+### 9. Standards and References
+
+End the report with concise citations to the official or authoritative sources used for the assessment.
+
+Include references when relevant to the findings:
+
+- Azure Agentic AI Security Baseline from the assessed repository or skill repository
+- OWASP Top 10 for Agentic Applications
+- OWASP GenAI Security Project guidance
+- Microsoft Learn guidance for Azure services found in the repository
+- HashiCorp Terraform provider or module documentation for relevant IaC controls
+- official language or framework security documentation for the detected application stack
+- internal governance standards only when the user provides them or they are present in the repository
+
+Rules:
+
+- keep citations at the end so they support the assessment without interrupting the main narrative
+- cite only sources that are relevant to the actual findings or recommendations
+- prefer stable official documentation over blogs or generic articles
+- do not imply formal compliance certification from citations alone
 
 ---
 
@@ -481,6 +556,7 @@ This skill is complete only when it has:
 5. included a colored Mermaid diagram
 6. documented real gaps in a recommendation table
 7. attached implementation links appropriate to the detected technology
-8. verified that the report includes Summary, Scope, Architecture Overview, ASI Matrix, Detailed Findings, Mermaid Diagram, Gaps and Recommendations, Implementation Links, and References
+8. included concise standards and references citations
+9. verified that the report includes Executive Snapshot, Scope, Architecture Overview, Top Concerns, ASI Matrix, Detailed Findings, Mermaid Diagram, Gaps and Recommendations, Implementation Links, and Standards and References
 
 If the repository is not actually agentic, say so clearly and produce a reduced report explaining why the ASI mapping is limited.
